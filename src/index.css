@@ -8,3 +8,7 @@
 body {
   background-color: #6b76ff;
 }
+
+.main-container {
+  display: flex;
+}
