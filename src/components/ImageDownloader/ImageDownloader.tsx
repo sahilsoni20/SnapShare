@@ -12,8 +12,8 @@ export function ImageDownloader() {
     if (imageData) {
       const currentTime = Date.now()
       const timeExpiry = currentTime - imageData.timestamp
-      
-      if(timeExpiry) {
+       
+      if(timeExpiry < 5 * 60 * 1000) {
         const link = document.createElement('a')
         link.href = imageData.image
         link.download = `download image ${id}.png`
