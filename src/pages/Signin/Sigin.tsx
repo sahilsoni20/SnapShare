@@ -4,7 +4,7 @@ import {
   GoogleAuthProvider,
   signInWithPopup,
 } from "firebase/auth";
-import type {AuthProvider} from "firebase/auth"
+import type {AuthProvider, User} from "firebase/auth"
 import { firebaseAuth } from "../../firebase/firebaseConfig";
 import toast from "react-hot-toast";
 import { ButtonWrapper, Container, TextWrapper, Wrapper } from "./Style";
@@ -12,13 +12,15 @@ import { Navigate } from "react-router-dom";
 import { FaGoogle } from "react-icons/fa";
 
 export default function Signin() {
-  const { currentUser } = useUserStore();
+  const { currentUser, setCurrentUser } = useUserStore();
   const [loading, setLoading] = useState(false);
 
   const handleSignIn = (provider: AuthProvider) => {
     setLoading(true);
     signInWithPopup(firebaseAuth, provider)
-      .then(() => {
+      .then((result) => {
+        const user = result.user as User;
+        setCurrentUser(user)
         console.log("User signed in");
       })
       .catch(() => {
