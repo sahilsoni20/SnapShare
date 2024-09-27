@@ -25,15 +25,6 @@ export const UniqueId = () => {
   return uuidv4().slice(0, 6);
 };
 
-export const Copy = async (text: string) => {
-  try {
-    await navigator.clipboard.writeText(text);
-    toast.success("Text copied");
-  } catch (error) {
-    console.log("Failed to copied: ", error);
-  }
-};
-
 export const ImageExpiry = (
   uploadedTime: Date,
   expiryDuration: number
