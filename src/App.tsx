@@ -3,7 +3,8 @@ import "./index.css";
 import Home from "./pages/Home/Home";
 import Signin from "./pages/Signin/Sigin";
 import { Toaster } from "react-hot-toast";
-import Images  from "./components/Images/Images";
+import Images from "./components/Images/Images";
+import PrivateRoute from "./components/privateRoute";
 
 function App() {
   return (
@@ -14,7 +15,14 @@ function App() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/signin" element={<Signin />} />
-          <Route path="/image" element={<Images />} />
+          <Route
+            path="/images"
+            element={
+              <PrivateRoute>
+                <Images />
+              </PrivateRoute>
+            }
+          />
         </Routes>
       </Router>
     </>
