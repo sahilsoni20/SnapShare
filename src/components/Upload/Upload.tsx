@@ -146,7 +146,7 @@ export default function Upload() {
             className="upload-icon"
           />
           <p>
-            Drag & drop or <br /> Click to browse
+            Drag & drop or <br /> Click here to upload
           </p>
         </div>
         <Button
@@ -172,13 +172,13 @@ export default function Upload() {
                 {data.url}
               </a>
               <Copy onClick={() => handleCopy(data.url)}>
-                <GoCopy size={12} className="copy-icon"/>
+                <GoCopy size={12} className="copy-icon" />
               </Copy>
             </Url>
             <Id>
               Unique Code: <code>{data.uniqueId}</code>
               <Copy onClick={() => handleCopy(data.uniqueId)}>
-                <GoCopy size={12} className="copy-icon"/>
+                <GoCopy size={12} className="copy-icon" />
               </Copy>
             </Id>
           </DataInt>
