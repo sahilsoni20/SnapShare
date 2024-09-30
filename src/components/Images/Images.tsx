@@ -8,9 +8,9 @@ import {
 import { ref, deleteObject } from "firebase/storage";
 import { FiLink } from "react-icons/fi";
 import Masonry, { ResponsiveMasonry } from "react-responsive-masonry";
-import { IoIosShareAlt } from "react-icons/io";
+import { IoIosShareAlt, IoMdImages } from "react-icons/io";
 import { MdDelete } from "react-icons/md";
-import { Div, IconButton, MasonryItem, Overlay } from "./Style";
+import { Div, IconButton, MasonryItem, Nothing, Overlay } from "./Style";
 import NavBar from "../NavBar/NavBar";
 
 export default function Images() {
@@ -91,13 +91,15 @@ export default function Images() {
     <>
       <NavBar />
       <Div>
-        <ResponsiveMasonry columnsCountBreakPoints={{ 350: 2, 750: 3, 900: 4 }}>
-          <Masonry gutter="10px">
-            {images.length > 0 ? (
-              images.map((image, index) => (
+        {images.length > 0 ? (
+          images.map((image, index) => (
+            <ResponsiveMasonry
+              columnsCountBreakPoints={{ 350: 2, 750: 3, 900: 4 }}
+            >
+              <Masonry gutter="10px">
                 <MasonryItem key={index}>
                   <img
-                    style={{zIndex: -1}}
+                    style={{ zIndex: -1 }}
                     src={image.url}
                     alt={`Uploaded Image ${index}`}
                   />
@@ -122,12 +124,12 @@ export default function Images() {
                     </div>
                   </Overlay>
                 </MasonryItem>
-              ))
-            ) : (
-              <p>No images uploaded yet.</p>
-            )}
-          </Masonry>
-        </ResponsiveMasonry>
+              </Masonry>
+            </ResponsiveMasonry>
+          ))
+        ) : (
+          <Nothing><IoMdImages size={30} />Upload image to see</Nothing>
+        )}
       </Div>
     </>
   );

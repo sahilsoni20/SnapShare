@@ -54,3 +54,13 @@ export const IconButton = styled.button`
   cursor: pointer;
   margin: 0 6px;
 `;
+
+export const Nothing = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  height: 39rem;
+  width: auto;
+  margin: auto;
+`
