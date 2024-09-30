@@ -1,10 +1,11 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useUploadStore } from "../../hooks/useUploadStore";
 import toast from "react-hot-toast";
 import { useDropzone } from "react-dropzone";
 import { UniqueId } from "../../utils/helper";
 import { getDownloadURL, ref, uploadBytesResumable } from "firebase/storage";
 import {
+  firebaseAuth,
   firebaseFirestore,
   firebaseStorage,
 } from "../../firebase/firebaseConfig";
@@ -50,22 +51,39 @@ export default function Upload() {
     multiple: true,
   });
 
+
+const useAuth = () => {
+  const [currentUser, setCurrentUser] = useState(null);
+
+  useEffect(() => {
+    const unsubscribe = firebaseAuth.onAuthStateChanged(user => {
+      setCurrentUser(user);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  return { currentUser };
+};
+
+  const { currentUser } = useAuth(); // Get current user
+
   const handleUpload = async () => {
     if (images.length === 0) return;
-
+  
     setUploading(true);
-
+  
     try {
       const uploadPromises = images.map((image) => {
         return new Promise<void>((resolve, reject) => {
-          const uniqueId = UniqueId(); // Generate a new uniqueId for each image
+          const uniqueId = UniqueId();
           const storageRef = ref(
             firebaseStorage,
             `images/${uniqueId}-${image.name}`
           );
-
+  
           const uploadTask = uploadBytesResumable(storageRef, image);
-
+  
           uploadTask.on(
             "state_changed",
             () => {},
@@ -76,35 +94,32 @@ export default function Upload() {
             },
             async () => {
               try {
-                const downloadUrl = await getDownloadURL(
-                  uploadTask.snapshot.ref
-                );
-                await addDoc(collection(firebaseFirestore, "images"), {
+                const downloadUrl = await getDownloadURL(uploadTask.snapshot.ref);
+                
+                // Use optional chaining to safely access currentUser.uid
+                const userPath = currentUser ? `users/${currentUser?.uid}/images` : "images";
+  
+                await addDoc(collection(firebaseFirestore, userPath), {
                   uniqueId,
                   url: downloadUrl,
                   uploadAt: Date.now(),
                 });
-
-                // Add the uploaded data to state and remove it after 5 minutes
+  
                 setUploadedData((prevData) => [
                   ...prevData,
                   { uniqueId, url: downloadUrl },
                 ]);
-
-                // Set timeout to remove the link and code after 5 minutes
+  
                 setTimeout(() => {
                   setUploadedData((prevData) =>
                     prevData.filter((data) => data.uniqueId !== uniqueId)
                   );
-                }, 300000); // 300,000 ms = 5 minutes
-
+                }, 300000);
+  
                 toast.success(`${image.name} uploaded successfully`);
                 resolve();
               } catch (firestoreError) {
-                console.error(
-                  "Error adding document to Firestore: ",
-                  firestoreError
-                );
+                console.error("Error adding document to Firestore: ", firestoreError);
                 toast.error(`Failed to store ${image.name} in Firestore`);
                 reject(firestoreError);
               }
@@ -112,17 +127,17 @@ export default function Upload() {
           );
         });
       });
-
-      await Promise.all(uploadPromises); // Wait for all images to upload
+  
+      await Promise.all(uploadPromises);
     } catch (error) {
       console.error("Error during upload: ", error);
       toast.error("Error uploading images");
     } finally {
       setUploading(false);
-      setImages([]); // Clear images after upload
+      setImages([]);
     }
   };
-
+  
   const handleCopy = async (text: string) => {
     try {
       await navigator.clipboard.writeText(text);
@@ -148,7 +163,7 @@ export default function Upload() {
           <p>
             Drag & drop or <br /> Click here to upload
           </p>
-        </div>
+        </div>  
         <Button
           onClick={handleUpload}
           disabled={uploading || images.length === 0}
