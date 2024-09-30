@@ -23,6 +23,7 @@ import {
   Url,
 } from "./Style";
 import { GoCopy } from "react-icons/go";
+import { User } from "firebase/auth";
 
 export default function Upload() {
   const { images, setImages } = useUploadStore();
@@ -51,20 +52,19 @@ export default function Upload() {
     multiple: true,
   });
 
+  const useAuth = () => {
+    const [currentUser, setCurrentUser] = useState<User | null>(null);
 
-const useAuth = () => {
-  const [currentUser, setCurrentUser] = useState(null);
+    useEffect(() => {
+      const unsubscribe = firebaseAuth.onAuthStateChanged((user) => {
+        setCurrentUser(user);
+      });
 
-  useEffect(() => {
-    const unsubscribe = firebaseAuth.onAuthStateChanged(user => {
-      setCurrentUser(user);
-    });
+      return () => unsubscribe();
+    }, []);
 
-    return () => unsubscribe();
-  }, []);
-
-  return { currentUser };
-};
+    return { currentUser };
+  };
 
   const { currentUser } = useAuth(); // Get current user
 
@@ -96,30 +96,41 @@ const useAuth = () => {
               try {
                 const downloadUrl = await getDownloadURL(uploadTask.snapshot.ref);
                 
-                // Use optional chaining to safely access currentUser.uid
-                const userPath = currentUser ? `users/${currentUser?.uid}/images` : "images";
+                if (currentUser) {
+                  // Only save to Firestore if the user is authenticated
+                  const userPath = `users/${currentUser.uid}/images`;
   
-                await addDoc(collection(firebaseFirestore, userPath), {
-                  uniqueId,
-                  url: downloadUrl,
-                  uploadAt: Date.now(),
-                });
+                  await addDoc(collection(firebaseFirestore, userPath), {
+                    uniqueId,
+                    url: downloadUrl,
+                    uploadAt: Date.now(),
+                  });
+                  toast.success(`${image.name} uploaded successfully`);
+                } else {
+                  // Notify the user that the image is uploaded but not saved permanently
+                  toast.success(
+                    `${image.name} uploaded, but it won't be saved permanently since you're not signed in.`
+                  );
+                }
   
                 setUploadedData((prevData) => [
                   ...prevData,
                   { uniqueId, url: downloadUrl },
                 ]);
   
+                // Remove image from UI after 5 minutes (300000 ms)
                 setTimeout(() => {
                   setUploadedData((prevData) =>
                     prevData.filter((data) => data.uniqueId !== uniqueId)
                   );
                 }, 300000);
   
-                toast.success(`${image.name} uploaded successfully`);
                 resolve();
               } catch (firestoreError) {
-                console.error("Error adding document to Firestore: ", firestoreError);
+                console.error(
+                  "Error adding document to Firestore: ",
+                  firestoreError
+                );
                 toast.error(`Failed to store ${image.name} in Firestore`);
                 reject(firestoreError);
               }
@@ -134,9 +145,10 @@ const useAuth = () => {
       toast.error("Error uploading images");
     } finally {
       setUploading(false);
-      setImages([]);
+      setImages([]); // Clear the uploaded images
     }
   };
+  
   
   const handleCopy = async (text: string) => {
     try {
@@ -163,7 +175,7 @@ const useAuth = () => {
           <p>
             Drag & drop or <br /> Click here to upload
           </p>
-        </div>  
+        </div>
         <Button
           onClick={handleUpload}
           disabled={uploading || images.length === 0}
