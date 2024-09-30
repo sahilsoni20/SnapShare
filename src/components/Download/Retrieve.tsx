@@ -4,11 +4,16 @@ import { collection, getDocs, query, where } from "firebase/firestore";
 import toast from "react-hot-toast";
 import { Button, DownloadCont, ImageUrl, Input, Retrieve } from "./Style";
 import { IoCloudDownloadOutline } from "react-icons/io5";
+import { getAuth } from "firebase/auth"; // Import Firebase auth
 
 export default function DownloadImage() {
   const [uniqueId, setUniqueId] = useState("");
   const [imageUrl, setImageUrl] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // Initialize Firebase Auth and get current user
+  const auth = getAuth();
+  const currentUser = auth.currentUser;
 
   const handleFetchImage = async () => {
     if (!uniqueId) {
@@ -18,17 +23,18 @@ export default function DownloadImage() {
 
     setLoading(true);
     try {
-      // Query the Firestore collection to find the document with the matching uniqueId field
+      // Determine the collection path based on user authentication
+      const userPath = currentUser ? `users/${currentUser.uid}/images` : "images";
+
       const q = query(
-        collection(firebaseFirestore, "images"),
+        collection(firebaseFirestore, userPath),
         where("uniqueId", "==", uniqueId)
       );
       const querySnapshot = await getDocs(q);
 
       if (!querySnapshot.empty) {
-        // Get the first matching document (assuming uniqueId is unique)
         const doc = querySnapshot.docs[0];
-        setImageUrl(doc.data().url); // Get the URL from Firestore
+        setImageUrl(doc.data().url);
         toast.success("Image found!");
       } else {
         setImageUrl("");
