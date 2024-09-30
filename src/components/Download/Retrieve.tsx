@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { firebaseFirestore } from "../../firebase/firebaseConfig";
-import { doc, getDoc } from "firebase/firestore";
+import { collection, getDocs, query, where } from "firebase/firestore";
 import toast from "react-hot-toast";
-import { Button, DownloadCont, Input, Retrieve } from "./Style";
+import { Button, DownloadCont, ImageUrl, Input, Retrieve } from "./Style";
 import { IoCloudDownloadOutline } from "react-icons/io5";
 
 export default function DownloadImage() {
@@ -18,11 +18,17 @@ export default function DownloadImage() {
 
     setLoading(true);
     try {
-      const docRef = doc(firebaseFirestore, "images", uniqueId); // Use uniqueId to get the document
-      const docSnap = await getDoc(docRef);
+      // Query the Firestore collection to find the document with the matching uniqueId field
+      const q = query(
+        collection(firebaseFirestore, "images"),
+        where("uniqueId", "==", uniqueId)
+      );
+      const querySnapshot = await getDocs(q);
 
-      if (docSnap.exists()) {
-        setImageUrl(docSnap.data().url); // Get the URL from Firestore
+      if (!querySnapshot.empty) {
+        // Get the first matching document (assuming uniqueId is unique)
+        const doc = querySnapshot.docs[0];
+        setImageUrl(doc.data().url); // Get the URL from Firestore
         toast.success("Image found!");
       } else {
         setImageUrl("");
@@ -54,20 +60,12 @@ export default function DownloadImage() {
       </DownloadCont>
 
       {imageUrl && (
-        <div>
-          <h3>Image Found:</h3>
-          <img
-            src={imageUrl}
-            alt="Fetched"
-            style={{ maxWidth: "300px", maxHeight: "300px" }}
-          />
-          <p>
-            Download Link:{" "}
-            <a href={imageUrl} target="_blank" rel="noopener noreferrer">
-              {imageUrl}
-            </a>
-          </p>
-        </div>
+        <ImageUrl>
+          <h4>Image URL is ready: </h4>
+          <a href={imageUrl} download target="_blank" rel="noopener noreferrer">
+            Click here
+          </a>
+        </ImageUrl>
       )}
     </Retrieve>
   );

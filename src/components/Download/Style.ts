@@ -129,3 +129,29 @@ export const Button = styled.button`
     font-size: 0.7rem;
   }
 `;
+
+export const ImageUrl = styled.div`
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+
+  a {
+    text-decoration: none;
+    color: white;
+    font-size: 0.9rem;
+    &:hover {
+      color: #ffe5b4;
+    }
+  }
+
+  @media screen and (max-width: 480px) {
+    h4 {
+      font-size: 0.8rem;
+    }
+
+    a {
+      font-size: 0.8rem;
+    }
+  }
+`;
