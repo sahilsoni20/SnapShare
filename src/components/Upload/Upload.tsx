@@ -2,7 +2,6 @@ import { useCallback, useEffect, useState } from "react";
 import { useUploadStore } from "../../hooks/useUploadStore";
 import toast from "react-hot-toast";
 import { useDropzone } from "react-dropzone";
-import { UniqueId } from "../../utils/helper";
 import { getDownloadURL, ref, uploadBytesResumable } from "firebase/storage";
 import {
   firebaseAuth,
@@ -11,6 +10,7 @@ import {
 } from "../../firebase/firebaseConfig";
 import { addDoc, collection } from "firebase/firestore";
 import { IoCloudUploadOutline } from "react-icons/io5";
+import { v4 as uuidv4 } from "uuid";
 import {
   Button,
   Copy,
@@ -64,6 +64,10 @@ export default function Upload() {
     }, []);
 
     return { currentUser };
+  };
+
+  const UniqueId = () => {
+    return uuidv4().slice(0, 6);
   };
 
   const { currentUser } = useAuth(); // Get current user
