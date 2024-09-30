@@ -6,6 +6,7 @@ export const NavContainer = styled.div`
   backdrop-filter: blur(8px);
   box-shadow: rgba(0, 0, 0, 0.1) 0px 20px 25px -5px,
     rgba(0, 0, 0, 0.04) 0px 10px 10px -5px;
+  box-shadow: rgba(0, 0, 0, 0.12) 0px 1px 3px, rgba(0, 0, 0, 0.24) 0px 1px 2px;
 `;
 
 export const Nav = styled.nav`

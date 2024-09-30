@@ -43,8 +43,7 @@ export default function NavBar() {
               />
               {showdropDown && (
                 <DropDownMenu>
-                  <AuthHref>Image</AuthHref>
-                  <AuthHref>Help</AuthHref>
+                  <AuthHref onClick={() => navigate("/image")}>Images</AuthHref>
                 </DropDownMenu>
               )}
             </NavLink>
@@ -54,13 +53,7 @@ export default function NavBar() {
               <Img
                 src="/default_img.png"
                 alt="Avatar"
-                onClick={() => setShowDropDown(!showdropDown)}
               />
-              {showdropDown && (
-                <DropDownMenu>
-                  <AuthHref>Help</AuthHref>
-                </DropDownMenu>
-              )}
             </NavLink>
           )}
         </NavItems>
