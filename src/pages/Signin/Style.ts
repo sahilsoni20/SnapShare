@@ -1,30 +1,12 @@
 import styled from "styled-components";
 
 export const Container = styled.div`
-  display: flex;
-  background-color: ;
-  gap: 80px;
-
-  img {
-    width: 747px;
-  }
-
-  @media screen and (max-width: 1200px) {
-    gap: 40px;
-  }
-
-  @media screen and (max-width: 1060px) {
-    display: flex;
+ display: flex;
     width: 100%;
     aligin-items: center;
     justify-content: center;
     align-items: center;
     margin-top: 8rem;
-
-    img {
-      display: none;
-    }
-  }
 `;
 
 export const Wrapper = styled.div`
@@ -84,7 +66,7 @@ export const ButtonWrapper = styled.div`
     cursor: pointer;
     background-color: #c4a484;
     transition: background-color 0.2s ease;
-    box-shadow: rgba(100, 100, 111, 0.2) 0px 7px 29px 0px;
+    box-shadow: rgba(0, 0, 0, 0.1) 0px 20px 25px -5px, rgba(0, 0, 0, 0.04) 0px 10px 10px -5px;
   }
 
   @media screen and (max-width: 580px) {
