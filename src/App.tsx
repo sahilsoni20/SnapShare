@@ -4,7 +4,7 @@ import Home from "./pages/Home/Home";
 import Signin from "./pages/Signin/Sigin";
 import { Toaster } from "react-hot-toast";
 import Images from "./components/Images/Images";
-import PrivateRoute from "./components/privateRoute";
+import PrivateRoute from "./components/PrivateRoute";
 
 function App() {
   return (

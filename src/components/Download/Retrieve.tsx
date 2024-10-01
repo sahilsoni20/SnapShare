@@ -23,8 +23,10 @@ export default function DownloadImage() {
 
     setLoading(true);
     try {
-      // Determine the collection path based on user authentication
-      const userPath = currentUser ? `users/${currentUser.uid}/images` : "images";
+      // Check if the user is signed in or not
+      const userPath = currentUser
+        ? `users/${currentUser.uid}/images`
+        : "publicImages";
 
       const q = query(
         collection(firebaseFirestore, userPath),

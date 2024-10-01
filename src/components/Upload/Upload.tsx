@@ -74,20 +74,20 @@ export default function Upload() {
 
   const handleUpload = async () => {
     if (images.length === 0) return;
-  
+
     setUploading(true);
-  
+
     try {
       const uploadPromises = images.map((image) => {
         return new Promise<void>((resolve, reject) => {
           const uniqueId = UniqueId();
           const storageRef = ref(
             firebaseStorage,
-            `images/${uniqueId}-${image.name}`
+            `images/${uniqueId}-${image.name}` // Uploads all images to a global "images/" directory
           );
-  
+
           const uploadTask = uploadBytesResumable(storageRef, image);
-  
+
           uploadTask.on(
             "state_changed",
             () => {},
@@ -98,12 +98,14 @@ export default function Upload() {
             },
             async () => {
               try {
-                const downloadUrl = await getDownloadURL(uploadTask.snapshot.ref);
-                
+                const downloadUrl = await getDownloadURL(
+                  uploadTask.snapshot.ref
+                );
+
                 if (currentUser) {
-                  // Only save to Firestore if the user is authenticated
+                  // Signed-in users' uploads are saved in Firestore under their user ID
                   const userPath = `users/${currentUser.uid}/images`;
-  
+
                   await addDoc(collection(firebaseFirestore, userPath), {
                     uniqueId,
                     url: downloadUrl,
@@ -111,24 +113,27 @@ export default function Upload() {
                   });
                   toast.success(`${image.name} uploaded successfully`);
                 } else {
-                  // Notify the user that the image is uploaded but not saved permanently
-                  toast.success(
-                    `${image.name} uploaded, but it won't be saved permanently since you're not signed in.`
-                  );
+                  // Non-signed-in users' images are uploaded to a public Firestore collection
+                  await addDoc(collection(firebaseFirestore, "publicImages"), {
+                    uniqueId,
+                    url: downloadUrl,
+                    uploadAt: Date.now(),
+                  });
+                  toast.success(`${image.name} uploaded for temporary access.`);
                 }
-  
+
                 setUploadedData((prevData) => [
                   ...prevData,
                   { uniqueId, url: downloadUrl },
                 ]);
-  
+
                 // Remove image from UI after 5 minutes (300000 ms)
                 setTimeout(() => {
                   setUploadedData((prevData) =>
                     prevData.filter((data) => data.uniqueId !== uniqueId)
                   );
                 }, 300000);
-  
+
                 resolve();
               } catch (firestoreError) {
                 console.error(
@@ -142,7 +147,7 @@ export default function Upload() {
           );
         });
       });
-  
+
       await Promise.all(uploadPromises);
     } catch (error) {
       console.error("Error during upload: ", error);
@@ -152,8 +157,7 @@ export default function Upload() {
       setImages([]); // Clear the uploaded images
     }
   };
-  
-  
+
   const handleCopy = async (text: string) => {
     try {
       await navigator.clipboard.writeText(text);
