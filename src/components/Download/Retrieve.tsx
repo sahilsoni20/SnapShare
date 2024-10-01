@@ -20,23 +20,38 @@ export default function DownloadImage() {
       toast.error("Please enter a unique code.");
       return;
     }
-
+  
     setLoading(true);
     try {
-      // Check if the user is signed in or not
-      const userPath = currentUser
-        ? `users/${currentUser.uid}/images`
-        : "publicImages";
-
+      // Correct path for non-signed-in users (use 'publicImages' if that's what you're using)
+      const userPath = currentUser ? `users/${currentUser.uid}/images` : "publicImages";
+      
+      // Log userPath and uniqueId for debugging purposes
+      console.log("Fetching from path:", userPath);
+      console.log("With unique ID:", uniqueId);
+  
       const q = query(
         collection(firebaseFirestore, userPath),
-        where("uniqueId", "==", uniqueId)
+        where("uniqueId", "==", uniqueId) // Ensure this field is correct in Firestore
       );
+      
       const querySnapshot = await getDocs(q);
-
+  
       if (!querySnapshot.empty) {
         const doc = querySnapshot.docs[0];
-        setImageUrl(doc.data().url);
+        const imageData = doc.data();
+  
+        // Check for expiration (if applicable)
+        const currentTime = Date.now();
+        if (imageData.expirationAt && currentTime > imageData.expirationAt) {
+          toast.error("This image has expired.");
+          setImageUrl(""); // Clear image URL if expired
+          setLoading(false);
+          return;
+        }
+  
+        // If image is found and not expired, set the image URL
+        setImageUrl(imageData.url);
         toast.success("Image found!");
       } else {
         setImageUrl("");
@@ -49,6 +64,7 @@ export default function DownloadImage() {
       setLoading(false);
     }
   };
+  
 
   return (
     <Retrieve>

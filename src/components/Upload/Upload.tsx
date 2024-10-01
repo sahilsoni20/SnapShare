@@ -4,7 +4,6 @@ import toast from "react-hot-toast";
 import { useDropzone } from "react-dropzone";
 import { getDownloadURL, ref, uploadBytesResumable } from "firebase/storage";
 import {
-  firebaseAuth,
   firebaseFirestore,
   firebaseStorage,
 } from "../../firebase/firebaseConfig";
@@ -23,7 +22,13 @@ import {
   Url,
 } from "./Style";
 import { GoCopy } from "react-icons/go";
-import { User } from "firebase/auth";
+import {
+  browserLocalPersistence,
+  getAuth,
+  onAuthStateChanged,
+  setPersistence,
+  User,
+} from "firebase/auth";
 
 export default function Upload() {
   const { images, setImages } = useUploadStore();
@@ -31,6 +36,17 @@ export default function Upload() {
   const [uploadedData, setUploadedData] = useState<
     { uniqueId: string; url: string }[]
   >([]);
+
+  const auth = getAuth();
+
+  setPersistence(auth, browserLocalPersistence)
+    .then(() => {
+      // User's authentication state will persist across reloads or tabs.
+      console.log("Auth persistence set to local.");
+    })
+    .catch((error) => {
+      console.error("Failed to set auth persistence: ", error);
+    });
 
   const onDrop = useCallback(
     (acceptedImages: File[]) => {
@@ -56,7 +72,8 @@ export default function Upload() {
     const [currentUser, setCurrentUser] = useState<User | null>(null);
 
     useEffect(() => {
-      const unsubscribe = firebaseAuth.onAuthStateChanged((user) => {
+      const auth = getAuth();
+      const unsubscribe = onAuthStateChanged(auth, (user) => {
         setCurrentUser(user);
       });
 
@@ -81,9 +98,11 @@ export default function Upload() {
       const uploadPromises = images.map((image) => {
         return new Promise<void>((resolve, reject) => {
           const uniqueId = UniqueId();
+          console.log("Generated Unique ID: ", uniqueId); // Log unique ID
+
           const storageRef = ref(
             firebaseStorage,
-            `images/${uniqueId}-${image.name}` // Uploads all images to a global "images/" directory
+            `images/${uniqueId}-${image.name}`
           );
 
           const uploadTask = uploadBytesResumable(storageRef, image);
@@ -101,38 +120,30 @@ export default function Upload() {
                 const downloadUrl = await getDownloadURL(
                   uploadTask.snapshot.ref
                 );
+                console.log("Download URL: ", downloadUrl); // Log download URL
 
                 if (currentUser) {
-                  // Signed-in users' uploads are saved in Firestore under their user ID
                   const userPath = `users/${currentUser.uid}/images`;
-
                   await addDoc(collection(firebaseFirestore, userPath), {
                     uniqueId,
                     url: downloadUrl,
                     uploadAt: Date.now(),
                   });
-                  toast.success(`${image.name} uploaded successfully`);
                 } else {
-                  // Non-signed-in users' images are uploaded to a public Firestore collection
-                  await addDoc(collection(firebaseFirestore, "publicImages"), {
+                  const generalPath = `publicImages`;
+                  await addDoc(collection(firebaseFirestore, generalPath), {
                     uniqueId,
                     url: downloadUrl,
                     uploadAt: Date.now(),
                   });
-                  toast.success(`${image.name} uploaded for temporary access.`);
                 }
+
+                toast.success(`${image.name} uploaded successfully`);
 
                 setUploadedData((prevData) => [
                   ...prevData,
                   { uniqueId, url: downloadUrl },
                 ]);
-
-                // Remove image from UI after 5 minutes (300000 ms)
-                setTimeout(() => {
-                  setUploadedData((prevData) =>
-                    prevData.filter((data) => data.uniqueId !== uniqueId)
-                  );
-                }, 300000);
 
                 resolve();
               } catch (firestoreError) {
@@ -140,7 +151,6 @@ export default function Upload() {
                   "Error adding document to Firestore: ",
                   firestoreError
                 );
-                toast.error(`Failed to store ${image.name} in Firestore`);
                 reject(firestoreError);
               }
             }
@@ -154,7 +164,7 @@ export default function Upload() {
       toast.error("Error uploading images");
     } finally {
       setUploading(false);
-      setImages([]); // Clear the uploaded images
+      setImages([]); // Clear uploaded images
     }
   };
 
